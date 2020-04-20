@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+<div class="container">
+    <h1>Resultados: </h1>
+    <h2>Muertes dadas por el modelo: {{ deaths }}</h2>
+    <div class="form">
+        <form action="/" method="GET">
+            <input type="submit" value="Regresar">
+        </form>
+    </div>
+
+</div>
+
+
+{% endblock %}

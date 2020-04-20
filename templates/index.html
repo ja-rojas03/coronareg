@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+<div class="container">
+    <h1 style="text-align: center;">Seleccione opcion</h1>
+    <div class="form">
+        <div class="row">
+            <form action="/newCase" method="GET">
+                <input type="submit" value="Agregar nuevo caso">
+            </form>
+        </div>
+        
+    </div>
+    <div class="row">
+        <div class="form">
+            <form action="/predictCase" method="GET">
+                <input type="submit" value="Predecir un caso">
+            </form>
+        </div>
+    </div>
+    
+</div>
+
+
+
+{% endblock %}
