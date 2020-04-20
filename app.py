@@ -1,6 +1,5 @@
 from flask import Flask,render_template, url_for, request, redirect, flash
 import model
-model.init()
 from helper import cmdRun
 from werkzeug.utils import secure_filename
 from importlib import reload
@@ -56,8 +55,8 @@ def newDataset():
         # training(f.filename)
         print("1",model.filename)
         # model.filename = f.filename
-        reload(model).__setattr__('filename', f.filename)
-
+        model.filename = f.filename
+        reload(model)
         # import model
         print("2",model.filename)
         return redirect('/')

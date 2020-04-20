@@ -23,9 +23,10 @@ from sklearn.linear_model import Lasso
 # if len(sys.argv) >= 2:
 #     filename = str(sys.argv[1])
 # else: 
-
-if filename is None:
-    filename = ''
+try: 
+    filename
+except NameError:
+    filename=''
 
 if(filename != ''):
     data = pd.read_csv(filename, sep=",")
