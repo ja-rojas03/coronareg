@@ -9,7 +9,7 @@ app.config['UPLOAD_FOLDER'] = "\data"
 
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
         return render_template('index.html')
 
