@@ -1,7 +1,13 @@
-from flask import Flask,render_template, url_for, request, redirect
-from model import convertToCsv
+from flask import Flask,render_template, url_for, request, redirect, flash
+import model
+model.init()
+from helper import cmdRun
+from werkzeug.utils import secure_filename
+from importlib import reload
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = "\data"
+
 
 
 @app.route('/')
@@ -9,8 +15,8 @@ def index():
         return render_template('index.html')
 
 
-@app.route('/newCase', methods=['GET', 'POST'])
-def newCase():
+@app.route('/predictCase', methods=['GET', 'POST'])
+def predictCase():
     if request.method == 'POST':
         selectedReg = request.form.get('country')
         totalpos = request.form.get('totalpos')
@@ -22,20 +28,43 @@ def newCase():
             "currentPositive": currentPos,
             "date": fecha,
         }
-        value = convertToCsv(info)
-        value = str(value)
-        value = value.replace('[[', '')
-        value = value.replace(']]', '')
+        value = model.convertToCsv(info)
+        linD = str(value[0])
+        linD = linD.replace('[[', '')
+        linD = linD.replace(']]', '')
 
-        return render_template('caseresults.html', deaths=value)
+        ridgeD = str(value[1])
+        ridgeD = ridgeD.replace('[[', '')
+        ridgeD = ridgeD.replace(']]', '')
+        info['linD'] = linD
+        info['ridgeD'] = ridgeD
+        # newCasePieChart(info)
+
+        return render_template('caseresults.html', deathsLin=linD, deathsRidge=ridgeD, info=info)
 
     else:
-        return render_template('newcase.html', titulo="Registrar nuevo dia", btn="Registrar")
+        return render_template('newcase.html', titulo="Registrar nuevo caso", btn="Evaluar")
 
 
-@app.route('/predictCase', methods=['GET', 'POST'])
-def predictCase():
-    return render_template('newcase.html', titulo="Registre datos del caso", btn="Evaluar")
+
+@app.route('/newDataset', methods=['GET', 'POST'])
+def newDataset():
+
+    if request.method == 'POST' :
+        f = request.files['file']
+        f.save(secure_filename(f.filename))
+        # training(f.filename)
+        print("1",model.filename)
+        # model.filename = f.filename
+        reload(model).__setattr__('filename', f.filename)
+
+        # import model
+        print("2",model.filename)
+        return redirect('/')
+    else: 
+        return render_template('fileupload.html')
+
+
 
 
 if __name__ == "__main__":

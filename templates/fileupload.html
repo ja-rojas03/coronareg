@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+<div class="container">
+    <h1>Seleccione Nuevo Dataset </h1>
+    <div class="form">
+        <div class="row">
+            <form action="/newDataset" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file">
+                <input type="submit" value="Subir Archivo">
+            </form>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

@@ -1,8 +1,10 @@
 
 # Import libraries to handle data
 import csv
+import sys
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import datetime
 import numpy as np
 import seaborn as sns
@@ -16,12 +18,24 @@ from sklearn.linear_model import Ridge
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import Lasso
 
-# Read data into dataframe using pandas
-data = pd.read_csv("data\covid19_italy_region_new.csv", sep = ",")
+
+# # Read data into dataframe using pandas
+# if len(sys.argv) >= 2:
+#     filename = str(sys.argv[1])
+# else: 
+
+if filename is None:
+    filename = ''
+
+if(filename != ''):
+    data = pd.read_csv(filename, sep=",")
+else:
+    data = pd.read_csv("data\covid19_italy_region_new.csv", sep=",")
 # Removing columns that only have one value or are redundant
-data = data.drop(columns = ['SNo','RegionCode','Country','HospitalizedPatients','IntensiveCarePatients','HomeConfinement','NewPositiveCases'])
+data = data.drop(columns=['SNo', 'RegionCode', 'Country', 'HospitalizedPatients',
+                        'IntensiveCarePatients', 'HomeConfinement', 'NewPositiveCases'])
 # Removed hour in Date since it does not contributes anything
-data['Date'] =pd.to_datetime(data['Date']).dt.date
+data['Date'] = pd.to_datetime(data['Date']).dt.date
 
 # ## To download datase
 # data.to_csv('data.csv')
@@ -32,14 +46,14 @@ df_all = data.copy()
 fromDate = min(data['Date'])
 df_all['timedelta'] = (df_all['Date'] - fromDate).dt.days.astype(int)
 print(df_all[['Date', 'timedelta']].tail())
-df_all.drop('Date', axis = 1, inplace = True)
+df_all.drop('Date', axis=1, inplace=True)
 
 #ONEHOT ENCODING BLOCK
 Region_Enc = data.select_dtypes(include=['object'])
 Region_Enc = pd.get_dummies(Region_Enc['RegionName'], columns='RegionName')
 #mergedata = mergedata.drop(['sex','region','smoker'],axis=1)
 
-x = df_all.drop(['RegionName'],axis = 1)
+x = df_all.drop(['RegionName'], axis=1)
 #x = df_all.drop(['RegionName'],axis = 1).values #returns a numpy array
 #min_max_scaler = preprocessing.StandardScaler().fit(x)
 #x_scaled = min_max_scaler.transform(x)
@@ -47,7 +61,7 @@ x = df_all.drop(['RegionName'],axis = 1)
 
 # df_all_scaled
 
-data = pd.concat([Region_Enc,x],axis=1)
+data = pd.concat([Region_Enc, x], axis=1)
 
 
 data.columns
@@ -75,25 +89,28 @@ df = data
                 'IntensiveCarePatients', 'TotalHospitalizedPatients', 'HomeConfinement',
                 'CurrentPositiveCases', 'NewPositiveCases', 'Deaths'],axis = 1)'''
 
-Xs = df.drop(['Latitude', 'Longitude', 'Deaths','TotalHospitalizedPatients','TestsPerformed','Recovered'],axis = 1)
+Xs = df.drop(['Latitude', 'Longitude', 'Deaths',
+            'TotalHospitalizedPatients', 'TestsPerformed', 'Recovered'], axis=1)
 print("Xs.columns\n", Xs.columns)
 scaler_xs = preprocessing.StandardScaler().fit(Xs)
 Xs_transformed = scaler_xs.transform(Xs)
 
-y = df['Deaths'].values.reshape(-1,1)
+y = df['Deaths'].values.reshape(-1, 1)
 #scaler_y = preprocessing.StandardScaler().fit(y)
 #y_transformed = scaler_y.transform(y)
 
 lin_reg = LinearRegression()
 
-MSEs = cross_val_score(lin_reg, Xs_transformed, y, scoring='neg_mean_squared_error', cv=40)
+MSEs = cross_val_score(lin_reg, Xs_transformed, y,
+                    scoring='neg_mean_squared_error', cv=40)
 
 mean_MSE = np.mean(MSEs)
 
-print("mean_MSE \n",mean_MSE*-1)
-print("mean_MSE sqrt \n",np.sqrt(mean_MSE*-1))
+print("mean_MSE \n", mean_MSE*-1)
+print("mean_MSE sqrt \n", np.sqrt(mean_MSE*-1))
 
-X_train, X_test, y_train, y_test = train_test_split(Xs, y, test_size=0.4, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(
+    Xs, y, test_size=0.4, random_state=0)
 scaler = preprocessing.StandardScaler().fit(X_train)
 X_train_transformed = scaler.transform(X_train)
 lin_reg = LinearRegression().fit(X_train_transformed, y_train)
@@ -114,23 +131,26 @@ To this point "y_predict" works great , problem is on funct newCasePred()
 # files.download('lin_reg.csv')
 
 ## RIDGE REGRESION
-alpha = [1e-15, 1e-10, 1e-8, 1e-4, 1e-3,1e-2, 1, 5, 10, 20]
+alpha = [1e-15, 1e-10, 1e-8, 1e-4, 1e-3, 1e-2, 1, 5, 10, 20]
 
 ridge = Ridge()
 
-parameters = {'alpha': [1e-15, 1e-10, 1e-8, 1e-4, 1e-3,1e-2, 1, 5, 10, 20]}
+parameters = {'alpha': [1e-15, 1e-10, 1e-8, 1e-4, 1e-3, 1e-2, 1, 5, 10, 20]}
 
-ridge_regressor = GridSearchCV(ridge, parameters,scoring='neg_mean_squared_error', cv=5)
+ridge_regressor = GridSearchCV(
+    ridge, parameters, scoring='neg_mean_squared_error', cv=5)
 
 ridge_regressor.fit(Xs_transformed, y)
 
 ridge_regressor.best_params_
 
 print("ridge_regressor.best_score_\n", ridge_regressor.best_score_*-1)
-print("ridge_regressor.best_score_ sqrt \n",np.sqrt(ridge_regressor.best_score_*-1))
+print("ridge_regressor.best_score_ sqrt \n",
+    np.sqrt(ridge_regressor.best_score_*-1))
 
 ## RIDGE REGRESION To train and download
-X_train, X_test, y_train, y_test = train_test_split(Xs, y, test_size=0.4, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(
+    Xs, y, test_size=0.4, random_state=0)
 scaler = preprocessing.StandardScaler().fit(X_train)
 X_train_transformed = scaler.transform(X_train)
 ridge = Ridge(alpha=0).fit(X_train_transformed, y_train)
@@ -193,45 +213,25 @@ def convertToCsv(info):
         [str(deltaTime)]
     
     atributes = ["Abruzzo","Basilicata","Calabria","Campania","Emilia-Romagna","Friuli Venezia Giulia","Lazio","Liguria","Lombardia","Marche","Molise","P.A. Bolzano","P.A. Trento","Piemonte","Puglia","Sardegna","Sicilia","Toscana","Umbria","Valle d'Aosta","Veneto","CurrentPositiveCases","TotalPositiveCases","timedelta"]
-    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",csv_value)
-    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",atributes)
+
     f = open("data/case.csv", "w+")
     writer = csv.writer(f)
     writer.writerows([atributes,csv_value])
     f.close()
-    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",csv_value)
 
     #after convert
     convertedData = pd.read_csv("data/case.csv", sep=",")
+    print("ridge_regressor.best_score_\n", ridge_regressor.best_score_*-1)
+    print("ridge_regressor.best_score_ sqrt \n",
+      np.sqrt(ridge_regressor.best_score_*-1))
     return newCasePred(convertedData);
 
-def reTrain() :
-    X_train, X_test, y_train, y_test = train_test_split(Xs, y, test_size=0.4, random_state=0)
-    scaler = preprocessing.StandardScaler().fit(X_train)
-    X_train_transformed = scaler.transform(X_train)
-    lin_reg = LinearRegression().fit(X_train_transformed, y_train)
-    X_test_transformed = scaler.transform(X_test)
-    lin_reg.score(X_test_transformed, y_test)
-    
 def newCasePred(Xs_new):
-    # Xs_new = pd.read_csv("data\case.csv", sep=",")
-    # reTrain()
-    scaler_new_xs = preprocessing.StandardScaler().fit(Xs_new)
-    new_Xs_transformed = scaler_new_xs.transform(Xs_new)
+    new_Xs_transformed = scaler.transform(Xs_new)
 
-    prediction = lin_reg.predict(new_Xs_transformed)
-    return prediction
-    """
-    prediction always returning same value 
-    """
+    lin_prediction = lin_reg.predict(new_Xs_transformed)
+    ridge_prediction = ridge.predict(new_Xs_transformed)
+
+    return [lin_prediction,ridge_prediction]
 
 
-
-# info = {
-#     "selectedRegion": "Veneto",
-#     "totalPositive": "6140",
-#     "currentPositive": "1343",
-#     "date": "2020-04-03",
-# }
-# convertToCsv(info)
- 
